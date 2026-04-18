@@ -1,0 +1,1 @@
+console=serial0,115200 loglevel=8 root=/dev/ram0 ramdisk_size=@@RAMDISK_SIZE_KB@@ coherent_pool=1M 8250.nr_uarts=1 snd_bcm2835.enable_headphones=0 cgroup_disable=memory numa_policy=interleave nvme.max_host_mem_size_mb=0

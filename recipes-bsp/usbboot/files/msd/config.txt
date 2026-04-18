@@ -1,0 +1,19 @@
+[all]
+kernel=kernel8.img
+initramfs rootfs.ext3.zst
+enable_uart=1
+uart_2ndstage=1
+disable_overscan=1
+dtoverlay=dwc2,dr_mode=peripheral
+start_file=start4.elf
+fixup_file=fixup4.dat
+
+[pi5]
+# Limit clock frequencies because this is likely to be powered 
+# via USB-3 port
+arm_freq=500
+gpu_freq=500
+
+# Probe the PCIe x1 connector even if DET_WAKE is low
+dtparam=pciex1
+
