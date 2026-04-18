@@ -1,0 +1,40 @@
+--- fit-image.0rig.its	2026-04-17 13:36:29.834028027 +0300
++++ fit-image.its	2026-04-17 14:23:42.800413483 +0300
+@@ -777,9 +777,20 @@
+                                 algo = "sha256";
+                         };
+                 };
++		ramdisk {
++			description = "Initramfs";
++			data = /incbin/("initramfs.ext3.gz");
++			type = "ramdisk";
++			arch = "arm64";
++			os = "linux";
++			compression = "gzip";
++                        hash-1 {
++                                algo = "sha256";
++                        };
++		};
+         };
+         configurations {
+-                default = "conf-bcm2711-rpi-4-b.dtb";
++                default = "conf-bcm2711-rpi-cm4.dtb";
+                 conf-bcm2711-rpi-4-b.dtb {
+                         description = "1 Linux kernel, FDT blob";
+                         kernel = "kernel-1";
+@@ -803,6 +814,15 @@
+                         hash-1 {
+                                 algo = "sha256";
+                         };
++                };
++                ramdisk-conf-bcm2711-rpi-cm4.dtb {
++                        description = "0 Linux kernel, FDT blob, Ramdisk";
++                        kernel = "kernel-1";
++                        fdt = "fdt-bcm2711-rpi-cm4.dtb";
++			ramdisk = "ramdisk";
++                        hash-1 {
++                                algo = "sha256";
++                        };
+                 };
+                 conf-bcm2711-rpi-cm4s.dtb {
+                         description = "0 Linux kernel, FDT blob";

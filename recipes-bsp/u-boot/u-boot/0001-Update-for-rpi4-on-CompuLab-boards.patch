@@ -1,0 +1,41 @@
+From 9c4845b1cdc2ae0e81986241fc314bdb6331ae44 Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Fri, 17 Apr 2026 12:19:02 +0300
+Subject: [PATCH] Update for rpi4 on CompuLab boards
+
+Signed-off-by: Valentin Raevsky <valentin@compulab.co.il>
+---
+ board/raspberrypi/rpi/rpi.env | 1 +
+ configs/rpi_arm64_defconfig   | 6 ++++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/board/raspberrypi/rpi/rpi.env b/board/raspberrypi/rpi/rpi.env
+index 9ac9d6768ca..76f623cb726 100644
+--- a/board/raspberrypi/rpi/rpi.env
++++ b/board/raspberrypi/rpi/rpi.env
+@@ -76,5 +76,6 @@ scriptaddr=0x05400000
+ pxefile_addr_r=0x05500000
+ fdt_addr_r=0x05600000
+ ramdisk_addr_r=0x05700000
++autoload=no
+ 
+ boot_targets=mmc usb pxe dhcp
+diff --git a/configs/rpi_arm64_defconfig b/configs/rpi_arm64_defconfig
+index 69e8e72c5d7..685a3347228 100644
+--- a/configs/rpi_arm64_defconfig
++++ b/configs/rpi_arm64_defconfig
+@@ -55,8 +55,14 @@ CONFIG_USB_XHCI_PCI=y
+ CONFIG_USB_DWC2=y
+ CONFIG_USB_KEYBOARD=y
+ CONFIG_USB_HOST_ETHER=y
++CONFIG_USB_ETHER_ASIX=y
++CONFIG_USB_ETHER_ASIX88179=y
++CONFIG_USB_ETHER_LAN75XX=y
+ CONFIG_USB_ETHER_LAN78XX=y
++CONFIG_USB_ETHER_MCS7830=y
++CONFIG_USB_ETHER_RTL8152=y
+ CONFIG_USB_ETHER_SMSC95XX=y
++CONFIG_USB_GADGET=y
+ CONFIG_VIDEO=y
+ # CONFIG_VIDEO_BPP8 is not set
+ # CONFIG_VIDEO_BPP16 is not set
