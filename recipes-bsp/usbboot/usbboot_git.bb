@@ -32,7 +32,35 @@ do_compile () {
 
 RPI_IMAGE = "core-image-full-cmdline"
 
-do_install:append() {
+make_boot_img() {
+
+    BOOTDD_VOLUME_ID="rpi"
+    INDIR=${INDIR}
+    SDIMG=boot.img
+    PART=part.img
+
+    rm -rf ${PART} ${SDIMG}
+
+    SIZE_MB=$(du -sBM ${INDIR} | awk -F"M" '$0=$1')
+    SIZE_MB=$(echo "( $SIZE_MB + 15 ) / 8 * 8" | bc)
+    dd if=/dev/zero of=${SDIMG}  bs=1M count=${SIZE_MB}
+    SIZE_B=$(echo "${SIZE_MB} * 2048 - 15" | bc)
+
+    parted -s ${SDIMG} mklabel msdos
+    parted -s ${SDIMG} unit s mkpart primary fat32 1 ${SIZE_B}
+    parted -s ${SDIMG} set 1 boot on
+    parted -s ${SDIMG} print
+
+    BOOT_BLOCKS=$(LC_ALL=C parted -s ${SDIMG} unit b print | awk '/ 1 / { print substr($4, 1, length($4 -1)) / 512 /2 }')
+    mkfs.vfat -F32 -n "${BOOTDD_VOLUME_ID}" -S 512 -C ${PART} ${BOOT_BLOCKS}
+    mcopy -v -i ${PART} -s ${INDIR}/* ::/
+    dd if=${PART}  of=${SDIMG} conv=notrunc seek=1 bs=512
+    mv boot.img ${DEPLOY_DIR_IMAGE}/boot.msd.img
+
+    rm -rf ${PART} ${SDIMG}
+}
+
+do_bootimage() {
     PDD=${DEPLOY_DIR_IMAGE}/boot.img.in
 
     rootfs_image=$(readlink -e ${DEPLOY_DIR_IMAGE}/${RPI_IMAGE}-${MACHINE}.rootfs.ext3)
@@ -48,16 +76,29 @@ do_install:append() {
     install -m 0644 ${UNPACKDIR}/msd/config.txt  ${PDD}/config.txt
     install -m 0644 ${UNPACKDIR}/msd/cmdline.txt ${PDD}/cmdline.txt
     sed -i "s/@@RAMDISK_SIZE_KB@@/${rootfs_image_size}/g" ${PDD}/cmdline.txt
+
+    INDIR=${DEPLOY_DIR_IMAGE}/boot.img.in make_boot_img
 }
+do_bootimage[depends] += "${RPI_IMAGE}:do_image rpi-bootfiles:do_deploy"
+addtask bootimage after do_install before do_deploy
 
 do_install () {
 	oe_runmake install 'DESTDIR=${D}'
 }
-do_install[depends] += "${RPI_IMAGE}:do_image rpi-bootfiles:do_deploy"
+
+do_deploy:append() {
+    cp -a ${DESTDIR}/usr/share/rpiboot/mass-storage-gadget64 ${DESTDIR}/usr/share/rpiboot/ramdisk-boot
+    cp ${DEPLOY_DIR_IMAGE}/boot.msd.img ${DESTDIR}/usr/share/rpiboot/ramdisk-boot/boot.img
+}
 
 do_deploy() {
     install -d ${DEPLOYDIR}/${PN}
-    oe_runmake install 'DESTDIR=${DEPLOYDIR}/${PN}'
+    DESTDIR=${DEPLOYDIR}/${PN}
+    oe_runmake install DESTDIR=${DESTDIR}
 }
+addtask deploy after do_install before do_tarball
 
-addtask deploy after do_install
+do_tarball() {
+    tar -C ${DEPLOY_DIR_IMAGE} -cjvf ${DEPLOY_DIR_IMAGE}/${PN}.tar.bz2 ${PN}
+}
+addtask tarball after do_deploy
