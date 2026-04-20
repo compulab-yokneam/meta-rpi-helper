@@ -10,6 +10,7 @@ SRC_URI = "gitsm://github.com/raspberrypi/usbboot.git;protocol=https;branch=mast
 SRC_URI:append = " \
     file://msd/cmdline.txt \
     file://msd/config.txt \
+    file://uboot/config.txt \
 "
 
 # Modify these as desired
@@ -39,8 +40,6 @@ make_boot_img() {
     SDIMG=boot.img
     PART=part.img
 
-    rm -rf ${PART} ${SDIMG}
-
     SIZE_MB=$(du -sBM ${INDIR} | awk -F"M" '$0=$1')
     SIZE_MB=$(echo "( $SIZE_MB + 15 ) / 8 * 8" | bc)
     dd if=/dev/zero of=${SDIMG}  bs=1M count=${SIZE_MB}
@@ -55,13 +54,31 @@ make_boot_img() {
     mkfs.vfat -F32 -n "${BOOTDD_VOLUME_ID}" -S 512 -C ${PART} ${BOOT_BLOCKS}
     mcopy -v -i ${PART} -s ${INDIR}/* ::/
     dd if=${PART}  of=${SDIMG} conv=notrunc seek=1 bs=512
-    mv boot.img ${DEPLOY_DIR_IMAGE}/boot.msd.img
+    mv boot.img ${DEPLOY_DIR_IMAGE}/${BOOTIMAGE_FILE}
 
     rm -rf ${PART} ${SDIMG}
 }
 
+UBOOT_DIR = "rpiboot.uboot.in"
+do_ubootdir() {
+    PDD=${DEPLOY_DIR_IMAGE}/${UBOOT_DIR}
+
+    install -d ${PDD}
+    tar -C ${DEPLOY_DIR_IMAGE}/bootfiles -cf - . | tar -C ${PDD} -xf -
+    cp -L ${DEPLOY_DIR_IMAGE}/Image ${PDD}/kernel8.img
+    cp -L ${DEPLOY_DIR_IMAGE}/u-boot.bin ${PDD}/u-boot.bin
+    install -m 0644 ${UNPACKDIR}/uboot/config.txt  ${PDD}/config.txt
+    for _file in ${RPI_KERNEL_DEVICETREE};do
+        cp -L ${DEPLOY_DIR_IMAGE}/$(basename ${_file}) ${PDD}/$(basename ${_file})
+    done
+}
+do_ubootdir[depends] += "virtual/bootloader:do_deploy rpi-bootfiles:do_deploy"
+addtask ubootdir after do_bootimage before do_deploy
+
+BOOTIMAGE_DIR = "boot.img.in"
+BOOTIMAGE_FILE = "boot.img"
 do_bootimage() {
-    PDD=${DEPLOY_DIR_IMAGE}/boot.img.in
+    PDD=${DEPLOY_DIR_IMAGE}/${BOOTIMAGE_DIR}
 
     rootfs_image=$(readlink -e ${DEPLOY_DIR_IMAGE}/${RPI_IMAGE}-${MACHINE}.rootfs.ext3)
     rootfs_image_size=$(stat --print=%s ${rootfs_image})
@@ -77,7 +94,9 @@ do_bootimage() {
     install -m 0644 ${UNPACKDIR}/msd/cmdline.txt ${PDD}/cmdline.txt
     sed -i "s/@@RAMDISK_SIZE_KB@@/${rootfs_image_size}/g" ${PDD}/cmdline.txt
 
-    INDIR=${DEPLOY_DIR_IMAGE}/boot.img.in make_boot_img
+    INDIR=${DEPLOY_DIR_IMAGE}/${BOOTIMAGE_DIR} make_boot_img
+
+    rm -rf ${PDD}
 }
 do_bootimage[depends] += "${RPI_IMAGE}:do_image rpi-bootfiles:do_deploy"
 addtask bootimage after do_install before do_deploy
@@ -88,7 +107,8 @@ do_install () {
 
 do_deploy:append() {
     cp -a ${DESTDIR}/usr/share/rpiboot/mass-storage-gadget64 ${DESTDIR}/usr/share/rpiboot/ramdisk-boot
-    cp ${DEPLOY_DIR_IMAGE}/boot.msd.img ${DESTDIR}/usr/share/rpiboot/ramdisk-boot/boot.img
+    mv ${DEPLOY_DIR_IMAGE}/${BOOTIMAGE_FILE}  ${DESTDIR}/usr/share/rpiboot/ramdisk-boot/boot.img
+    mv ${DEPLOY_DIR_IMAGE}/${UBOOT_DIR}  ${DESTDIR}/usr/share/rpiboot/uboot-boot
 }
 
 do_deploy() {
