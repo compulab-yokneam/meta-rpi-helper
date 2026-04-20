@@ -1,4 +1,10 @@
-enable_uart=1
-arm_64bit=1
-uart_2ndstage=1
+[all]
 kernel=u-boot.bin
+arm_64bit=1
+enable_uart=1
+enable_uart=1
+uart_2ndstage=1
+disable_overscan=1
+dtoverlay=dwc2,dr_mode=peripheral
+start_file=start4.elf
+fixup_file=fixup4.dat
