@@ -3,6 +3,8 @@ From: Valentin Raevsky <valentin@compulab.co.il>
 Date: Fri, 17 Apr 2026 12:19:02 +0300
 Subject: [PATCH] Update for rpi4 on CompuLab boards
 
+Upstream-Status: Pending
+
 Signed-off-by: Valentin Raevsky <valentin@compulab.co.il>
 ---
  board/raspberrypi/rpi/rpi.env | 1 +
