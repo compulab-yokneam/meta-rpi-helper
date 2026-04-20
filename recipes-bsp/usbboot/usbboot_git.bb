@@ -63,14 +63,22 @@ UBOOT_DIR = "rpiboot.uboot.in"
 do_ubootdir() {
     PDD=${DEPLOY_DIR_IMAGE}/${UBOOT_DIR}
 
-    install -d ${PDD}
+    install -d ${PDD}/overlays
     tar -C ${DEPLOY_DIR_IMAGE}/bootfiles -cf - . | tar -C ${PDD} -xf -
     cp -L ${DEPLOY_DIR_IMAGE}/Image ${PDD}/kernel8.img
     cp -L ${DEPLOY_DIR_IMAGE}/u-boot.bin ${PDD}/u-boot.bin
     install -m 0644 ${UNPACKDIR}/uboot/config.txt  ${PDD}/config.txt
-    for _file in ${RPI_KERNEL_DEVICETREE};do
-        cp -L ${DEPLOY_DIR_IMAGE}/$(basename ${_file}) ${PDD}/$(basename ${_file})
+    cd ${DEPLOY_DIR_IMAGE}
+
+    for _file in *.dtb;do
+        cp -vL $(readlink -e ${_file}) ${PDD}/
     done
+
+    for _file in *.dtbo;do
+        cp -vL $(readlink -e ${_file}) ${PDD}/overlays
+    done
+
+    cd -
 }
 do_ubootdir[depends] += "virtual/bootloader:do_deploy rpi-bootfiles:do_deploy"
 addtask ubootdir after do_bootimage before do_deploy
