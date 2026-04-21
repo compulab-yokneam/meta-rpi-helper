@@ -1,0 +1,1 @@
+8250.nr_uarts=1 console=ttyS0,115200 earlycon keep_bootcon loglevel=8 dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait  net.ifnames=0
