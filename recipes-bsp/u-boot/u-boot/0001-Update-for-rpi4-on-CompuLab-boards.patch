@@ -1,4 +1,4 @@
-From 65221a41f27640f37500a90a8e96011c03836830 Mon Sep 17 00:00:00 2001
+From c0b1bfd6ea5419e0fec42c30f2c275c9c17f85ed Mon Sep 17 00:00:00 2001
 From: Valentin Raevsky <valentin@compulab.co.il>
 Date: Mon, 20 Apr 2026 15:26:36 +0300
 Subject: [PATCH] Update for rpi4 on CompuLab boards
@@ -7,14 +7,14 @@ Upstream-Status: Pending
 
 Signed-off-by: Valentin Raevsky <valentin@compulab.co.il>
 ---
- board/raspberrypi/rpi/rpi.env | 4 ++++
- 1 file changed, 4 insertions(+)
+ board/raspberrypi/rpi/rpi.env | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/board/raspberrypi/rpi/rpi.env b/board/raspberrypi/rpi/rpi.env
-index 9ac9d6768ca..d045002e6c6 100644
+index 9ac9d6768ca..f2c9f7cc86f 100644
 --- a/board/raspberrypi/rpi/rpi.env
 +++ b/board/raspberrypi/rpi/rpi.env
-@@ -76,5 +76,9 @@ scriptaddr=0x05400000
+@@ -76,5 +76,14 @@ scriptaddr=0x05400000
  pxefile_addr_r=0x05500000
  fdt_addr_r=0x05600000
  ramdisk_addr_r=0x05700000
@@ -24,6 +24,11 @@ index 9ac9d6768ca..d045002e6c6 100644
 +vid=0x0a5c
 +pid=0x0104
 +run_msd=ums 0 mmc 0
++
++load_image=load mmc 0 ${loadaddr} kernel8.img
++bootargs=8250.nr_uarts=1 console=serial0,115200 earlycon keep_bootcon dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait rw net.ifnames=0
++mmc_boot=run load_image;  booti ${loadaddr} - ${fdtcontroladdr}
++bootcmd=run mmc_boot
 -- 
 2.34.1
 
