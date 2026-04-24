@@ -10,8 +10,8 @@ iface eth0 inet static
 	address 172.16.10.10
 	netmask 255.255.255.0
 
-auto usb0
-iface usb0 inet static
-	address 172.16.20.10
-	netmask 255.255.255.0
+# auto usb0
+# iface usb0 inet static
+# 	address 172.16.20.10
+#	netmask 255.255.255.0
 
