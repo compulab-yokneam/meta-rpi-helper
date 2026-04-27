@@ -91,13 +91,23 @@ do_bootimage() {
     rootfs_image=$(readlink -e ${DEPLOY_DIR_IMAGE}/${RPI_IMAGE}-${MACHINE}.rootfs.ext3)
     rootfs_image_size=$(stat --print=%s ${rootfs_image})
     rootfs_image_size=$(echo "(${rootfs_image_size} + 1023) / 1024" | bc)
-    install -d ${PDD}
+    install -d ${PDD}/overlays
     tar -C ${DEPLOY_DIR_IMAGE}/bootfiles -cf - . | tar -C ${PDD} -xf -
     cp -L ${DEPLOY_DIR_IMAGE}/Image ${PDD}/kernel8.img
     zstd -9c ${rootfs_image} > ${PDD}/rootfs.ext3.zst
-    for _file in ${RPI_KERNEL_DEVICETREE};do
-        cp -L ${DEPLOY_DIR_IMAGE}/$(basename ${_file}) ${PDD}/$(basename ${_file})
+
+    cd ${DEPLOY_DIR_IMAGE}
+
+    for _file in *.dtb;do
+        cp -vL $(readlink -e ${_file}) ${PDD}/
     done
+
+    for _file in *.dtbo;do
+        cp -vL $(readlink -e ${_file}) ${PDD}/overlays
+    done
+
+    cd -
+
     install -m 0644 ${UNPACKDIR}/msd/config.txt  ${PDD}/config.txt
     install -m 0644 ${UNPACKDIR}/msd/cmdline.txt ${PDD}/cmdline.txt
     sed -i "s/@@RAMDISK_SIZE_KB@@/${rootfs_image_size}/g" ${PDD}/cmdline.txt
